@@ -1,5 +1,5 @@
 import React from 'react';
-import { FormikHelpers, withFormik, FormikProps, FormikBag } from 'formik';
+import { FormikHelpers, Formik, Form, Field, useFormikContext} from 'formik';
 import { object, string, InferType } from 'yup';
 /**
  * Yup validation schema to ensure all properties of the form
@@ -15,58 +15,52 @@ export const SignUpFormValidationSchema = object({
  * Valid values for the signup form and their types
  */
 export type SignUpFormValues = InferType<typeof SignUpFormValidationSchema>;
+
 /**
  * React component properties and handlers
  */
 export interface SignUpFormComponentProps {
   initialValues?: SignUpFormValues;
-  onSubmit?: (values: SignUpFormValues, helper: FormikHelpers<SignUpFormValues>) => void;
+  onSubmit: (values: SignUpFormValues, helpers: FormikHelpers<SignUpFormValues>) => void;
 }
 
 /**
  * Inner form component
- * @param {FormikProps<SignUpFormValues>} props 
- * @returns 
  */
-const SignUpFormComponent = (props: FormikProps<SignUpFormValues>): JSX.Element => {
+const SignUpFormComponent = (): JSX.Element => {
+  const {errors, touched, isSubmitting } = useFormikContext<SignUpFormValues>();
   return (<div>
     <h3>Sign Up Form</h3>
     <hr />
-    <form onSubmit={props.handleSubmit}>
-      <input
-        type="email"
-        name="email"
-        onChange={props.handleChange}
-        onBlur={props.handleBlur}
-        value={props.values.email}
-      />
-      {props.errors.email && props.touched.email && props.errors.email}
-      <input
-        type="password"
-        name="password"
-        onChange={props.handleChange}
-        onBlur={props.handleBlur}
-        value={props.values.password}
-      />
-      {props.errors.password && props.touched.password && props.errors.password}
-      <button type="submit" disabled={props.isSubmitting}>
+    <Form>
+      <Field name="email" type="email" as="input"/>
+      {errors.email && touched.email ? errors.email: null}
+      <Field name="password" type="password" as="input" />
+      {errors.password && touched.password ? errors.password : null}
+      <button type="submit" disabled={isSubmitting}>
         Submit
       </button>
-    </form>
+      </Form>
   </div>)
 };
 
-export default withFormik<SignUpFormComponentProps, SignUpFormValues, SignUpFormValues>({
-    validationSchema: SignUpFormValidationSchema,
-    // using the mapPropsToValues fixes the console errors of "uncrontrolled" to "controlled" variables
-    mapPropsToValues: (props: SignUpFormComponentProps): SignUpFormValues => {
-      return {
-        email: props.initialValues?.email || '',
-        password: props.initialValues?.password || ''
-      }
-    },
-    handleSubmit: (values: SignUpFormValues, helpers: FormikBag<SignUpFormComponentProps, SignUpFormValues>) => {
-      helpers.props.onSubmit && helpers.props.onSubmit(values, helpers);
-    }
-  })
-(SignUpFormComponent);
+/**
+ * Wrap the inner component using <Formik> to be more like the current way we write forms
+ */
+const SignUpFormComponentNoHoc = ({onSubmit, initialValues}: SignUpFormComponentProps):  JSX.Element => {
+  return (
+    <Formik
+      initialValues={{
+        email: initialValues?.email || '',
+        password: initialValues?.password || ''
+      }}
+      validationSchema={SignUpFormValidationSchema}
+      onSubmit={onSubmit}
+    >{() => (
+      <SignUpFormComponent />  
+    )}
+    </Formik>
+ );
+}
+
+export default SignUpFormComponentNoHoc;
