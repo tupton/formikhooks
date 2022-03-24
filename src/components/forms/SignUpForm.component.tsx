@@ -58,6 +58,7 @@ const SignUpFormComponent = (props: FormikProps<SignUpFormValues>): JSX.Element 
 
 export default withFormik<SignUpFormComponentProps, SignUpFormValues, SignUpFormValues>({
     validationSchema: SignUpFormValidationSchema,
+    // using the mapPropsToValues fixes the console errors of "uncrontrolled" to "controlled" variables
     mapPropsToValues: (props: SignUpFormComponentProps): SignUpFormValues => {
       return {
         email: props.initialValues?.email || '',
